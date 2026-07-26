@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>龙高教室 - 论坛</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #7c3aed;
+            --primary-dark: #5b21b6;
+            --primary-light: #a78bfa;
+            --primary-bg: #f5f0ff;
+            --primary-surface: #ede9fe;
+            --gold: #f59e0b;
+            --diamond: #06b6d4;
+            --danger: #ef4444;
+            --success: #10b981;
+            --text: #1e1b4b;
+            --text-secondary: #6b7280;
+            --bg: #faf8ff;
+            --card: #ffffff;
+            --border: #e0d8f0;
+            --shadow: 0 4px 24px rgba(124, 58, 237, 0.10);
+            --radius: 14px;
+            --radius-sm: 8px;
+            --transition: 0.2s ease;
+            --font: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; display:flex; flex-direction:column; }
+        ::-webkit-scrollbar { width:6px; }
+        ::-webkit-scrollbar-thumb { background:#d4c8f0; border-radius:10px; }
+        .header { background:linear-gradient(135deg, #6d28d9 0%, #7c3aed 40%, #8b5cf6 100%); color:#fff; padding:0 20px; height:60px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 2px 20px rgba(124,58,237,0.3); }
+        .header .logo { font-size:1.4em; font-weight:800; cursor:pointer; }
+        .search-bar { flex:1; max-width:380px; position:relative; margin:0 12px; }
+        .search-bar input { width:100%; padding:9px 40px 9px 16px; border-radius:25px; border:2px solid transparent; background:rgba(255,255,255,0.18); color:#fff; outline:none; backdrop-filter:blur(6px); }
+        .search-bar input::placeholder { color:rgba(255,255,255,0.7); }
+        .search-bar .search-btn { position:absolute; right:6px; top:50%; transform:translateY(-50%); background:#fff; color:var(--primary); border:none; border-radius:50%; width:34px; height:34px; cursor:pointer; font-weight:700; }
+        .header-actions { display:flex; gap:8px; align-items:center; }
+        .btn { padding:8px 18px; border-radius:25px; border:2px solid rgba(255,255,255,0.6); background:transparent; color:#fff; cursor:pointer; font-weight:600; font-size:0.9em; transition:var(--transition); }
+        .btn:hover { background:rgba(255,255,255,0.15); }
+        .btn-primary { background:#fff; color:var(--primary-dark); border-color:#fff; }
+        .btn-primary:hover { background:#f0e8ff; }
+        .user-badge { display:flex; align-items:center; gap:8px; cursor:pointer; padding:5px 12px; border-radius:25px; background:rgba(255,255,255,0.12); font-weight:600; font-size:0.9em; }
+        .user-badge img { width:32px; height:32px; border-radius:50%; object-fit:cover; border:2px solid #fff; background:#ddd; }
+        .main-layout { display:flex; flex:1; max-width:1400px; width:100%; margin:0 auto; }
+        .sidebar { width:240px; background:var(--card); border-right:1px solid var(--border); padding:16px 12px; overflow-y:auto; position:sticky; top:60px; height:calc(100vh - 60px); }
+        .sidebar h3 { font-size:0.85em; color:var(--text-secondary); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:10px; }
+        .online-user-item { display:flex; align-items:center; gap:10px; padding:8px; border-radius:var(--radius-sm); cursor:pointer; font-size:0.9em; }
+        .online-user-item:hover { background:var(--primary-surface); }
+        .online-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+        .online-dot.online { background:#10b981; box-shadow:0 0 8px rgba(16,185,129,0.5); }
+        .online-dot.offline { background:#cbd5e1; }
+        .content-area { flex:1; padding:20px; overflow-y:auto; }
+        .category-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+        .category-tab { padding:8px 18px; border-radius:25px; border:2px solid var(--border); background:#fff; cursor:pointer; font-weight:600; font-size:0.88em; color:var(--text-secondary); }
+        .category-tab.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+        .post-card { background:#fff; border-radius:var(--radius); padding:18px 20px; margin-bottom:14px; box-shadow:var(--shadow); border:1px solid var(--border); }
+        .post-card .post-header { display:flex; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
+        .post-card .post-avatar { width:40px; height:40px; border-radius:50%; object-fit:cover; background:#e8e0f8; border:2px solid var(--primary-light); }
+        .post-card .post-user { font-weight:700; }
+        .post-card .post-category { font-size:0.75em; padding:3px 10px; border-radius:15px; background:var(--primary-surface); color:var(--primary-dark); font-weight:600; }
+        .post-card .post-time { font-size:0.78em; color:var(--text-secondary); }
+        .post-card .post-content { margin:6px 0; color:#374151; }
+        .post-card .post-actions { display:flex; gap:16px; margin-top:8px; flex-wrap:wrap; }
+        .post-card .post-actions button { background:none; border:none; cursor:pointer; font-size:0.85em; color:var(--text-secondary); display:flex; align-items:center; gap:4px; }
+        .post-card .post-actions button:hover { color:var(--primary); }
+        .badge-icon { display:inline-flex; align-items:center; gap:3px; font-size:0.8em; padding:2px 8px; border-radius:12px; font-weight:700; }
+        .badge-svip { background:linear-gradient(135deg,#1a1a1a,#3d3d3d); color:#fbbf24; border:1.5px solid #fbbf24; }
+        .badge-diamond { background:#e0f7fa; color:#0284a0; border:1.5px solid #06b6d4; }
+        .badge-admin { background:#fef3c7; color:#92400e; border:1.5px solid #f59e0b; font-size:0.7em; }
+        .avatar-frame-svip { border:3px solid #fbbf24 !important; box-shadow:0 0 14px rgba(251,191,36,0.5) !important; }
+        .avatar-frame-diamond { border:3px solid #06b6d4 !important; box-shadow:0 0 10px rgba(6,182,212,0.35) !important; }
+        .modal-overlay { position:fixed; inset:0; background:rgba(30,27,75,0.6); z-index:200; display:flex; align-items:center; justify-content:center; }
+        .modal { background:#fff; border-radius:var(--radius); padding:28px 24px; width:90%; max-width:480px; box-shadow:0 20px 50px rgba(0,0,0,0.25); max-height:85vh; overflow-y:auto; }
+        .modal input, .modal textarea, .modal select { width:100%; padding:11px 14px; margin:8px 0 14px; border:2px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font); }
+        .toast-container { position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+        .toast { padding:12px 20px; border-radius:25px; color:#fff; font-weight:600; animation:slideIn 0.3s; background:var(--primary); }
+        .toast.error { background:var(--danger); }
+        .toast.success { background:var(--success); }
+        @keyframes slideIn { from { transform:translateX(120%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+        .chat-panel { position:fixed; bottom:20px; right:20px; width:360px; max-height:500px; background:#fff; border-radius:var(--radius); box-shadow:0 12px 40px rgba(0,0,0,0.2); z-index:150; display:flex; flex-direction:column; overflow:hidden; }
+        .chat-panel.minimized .chat-body, .chat-panel.minimized .chat-input-row { display:none; }
+        .chat-header { background:var(--primary); color:#fff; padding:10px 14px; display:flex; justify-content:space-between; cursor:pointer; }
+        .chat-body { flex:1; overflow-y:auto; padding:10px; background:#fdfaff; display:flex; flex-direction:column; gap:6px; max-height:320px; }
+        .chat-msg { padding:8px 12px; border-radius:16px; max-width:80%; }
+        .chat-msg.sent { background:var(--primary); color:#fff; align-self:flex-end; }
+        .chat-msg.received { background:#ede9fe; align-self:flex-start; }
+        .chat-input-row { display:flex; gap:6px; padding:8px; border-top:1px solid var(--border); }
+        .chat-input-row input { flex:1; padding:9px 12px; border-radius:20px; border:2px solid var(--border); outline:none; }
+        .chat-input-row button { padding:9px 14px; border-radius:20px; background:var(--primary); color:#fff; border:none; cursor:pointer; }
+        .mobile-sidebar-toggle { display:none; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:#fff; border-radius:8px; padding:4px 10px; font-size:1.2em; cursor:pointer; margin-right:8px; }
+        @media (max-width:900px) {
+            .sidebar { display:none; }
+            .sidebar.open { display:block; position:fixed; z-index:180; left:0; top:60px; width:260px; height:calc(100vh - 60px); box-shadow:4px 0 20px rgba(0,0,0,0.2); }
+            .mobile-sidebar-toggle { display:block; }
+            .chat-panel { width:calc(100vw - 20px); right:10px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <button class="mobile-sidebar-toggle" onclick="toggleSidebar()">?</button>
+        <div class="logo" onclick="showForum()">?? 龙高教室</div>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="搜索帖子..." onkeydown="if(event.key==='Enter')searchPosts()">
+            <button class="search-btn" onclick="searchPosts()">??</button>
+        </div>
+        <div class="header-actions" id="headerActions">
+            <button class="btn" id="btnLogin" onclick="showLoginModal()">登录</button>
+            <button class="btn btn-primary" id="btnRegister" onclick="showRegisterModal()">注册</button>
+            <span id="loggedInBadge" style="display:none;"></span>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <aside class="sidebar" id="sidebar">
+            <h3>?? 在线用户</h3>
+            <div id="onlineUserList"></div>
+        </aside>
+        <main class="content-area" id="contentArea"></main>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <div id="modalContainer"></div>
+
+    <div class="chat-panel minimized" id="chatPanel" style="display:none;">
+        <div class="chat-header" onclick="toggleChatPanel()">
+            <span>?? 私聊 - <span id="chatPartnerName">...</span></span>
+            <span id="chatUnreadBadge" style="background:#ff3b3b;color:#fff;border-radius:50%;padding:2px 7px;font-size:0.75em;display:none;">0</span>
+            <button style="background:none;border:none;color:#fff;cursor:pointer;" onclick="event.stopPropagation();closeChat();">?</button>
+        </div>
+        <div class="chat-body" id="chatMessages"></div>
+        <div class="chat-input-row">
+            <input type="text" id="chatInput" placeholder="输入消息..." onkeydown="if(event.key==='Enter')sendChatMsg()">
+            <button onclick="sendChatMsg()">发送</button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== SUPABASE CONFIG ====================
+        const SUPABASE_URL = 'https://ehwdppaieqtqmfrmshat.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVod2RwcGFpZXF0cW1mcm1zaGF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwODY0NDgsImV4cCI6MjEwMDY2MjQ0OH0.oXVVfpxmlOJ0Mz3iMajLx5umJvNXc0IvSfDv7rJFtX0';
+        // 改用 supabaseClient 避免与全局 window.supabase 冲突
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentUser = null;
+        let activeChatPartnerId = null;
+        let selectedCategory = '全部';
+        let searchKeyword = '';
+        let unreadCount = 0;
+        let chatChannel = null;
+        const CATEGORIES = ['全部', '学习交流', '考试资讯', '校园生活', '资源共享', '其他'];
+
+        // ==================== TOAST & MODAL ====================
+        function showToast(msg, type='info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = msg;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        function showModal(title, bodyHTML, onConfirm, confirmText='确认') {
+            const container = document.getElementById('modalContainer');
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            overlay.innerHTML = `
+                <div class="modal">
+                    <h2>${title}</h2>
+                    <div>${bodyHTML}</div>
+                    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:16px;">
+                        <button class="btn btn-outline cancel-btn" style="color:#333; border-color:#ccc;">取消</button>
+                        <button class="btn btn-purple confirm-btn" style="background:var(--primary); color:#fff; border:none;">${confirmText}</button>
+                    </div>
+                </div>`;
+            container.appendChild(overlay);
+            overlay.querySelector('.cancel-btn').addEventListener('click', ()=> overlay.remove());
+            overlay.querySelector('.confirm-btn').addEventListener('click', ()=>{
+                if(onConfirm) {
+                    const result = onConfirm(overlay);
+                    if(result !== false) overlay.remove();
+                } else overlay.remove();
+            });
+            overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.remove(); });
+        }
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+        function humanizeTime(ts) {
+            const diff = Date.now() - new Date(ts).getTime();
+            if(diff < 60000) return '刚刚';
+            if(diff < 3600000) return Math.floor(diff/60000)+'分钟前';
+            if(diff < 86400000) return Math.floor(diff/3600000)+'小时前';
+            return new Date(ts).toLocaleDateString('zh-CN');
+        }
+        function getAvatarURL(user) {
+            if(user && user.avatar_url && user.avatar_url.trim()) return user.avatar_url.trim();
+            return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%237c3aed' width='100' height='100' rx='50'/%3E%3Ctext x='50' y='68' text-anchor='middle' fill='white' font-size='44' font-family='sans-serif'%3E${encodeURIComponent((user?.username||'?')[0].toUpperCase())}%3C/text%3E%3C/svg%3E`;
+        }
+        function getBadgeHTML(level, isAdmin) {
+            let badges = '';
+            if(level === 'svip_admin') badges += '<span class="badge-icon badge-svip">?? SVIP</span><span class="badge-icon badge-admin">??? 管理员</span>';
+            else if(level === 'diamond') badges += '<span class="badge-icon badge-diamond">?? 钻石</span>';
+            return badges;
+        }
+        function getAvatarFrameClass(level) {
+            if(level === 'svip_admin') return 'avatar-frame-svip';
+            if(level === 'diamond') return 'avatar-frame-diamond';
+            return '';
+        }
+
+        // ==================== AUTH ====================
+        async function updateLastActive() {
+            if(!currentUser) return;
+            await supabaseClient.from('profiles').update({ last_active: new Date().toISOString() }).eq('id', currentUser.id);
+        }
+
+        async function refreshCurrentUser() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if(session && session.user) {
+                const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', session.user.id).single();
+                if(profile && !profile.is_banned) {
+                    currentUser = {
+                        id: session.user.id,
+                        username: profile.username,
+                        avatar_url: profile.avatar_url,
+                        level: profile.level,
+                        is_admin: profile.level === 'svip_admin',
+                        is_banned: profile.is_banned
+                    };
+                    await updateLastActive();
+                } else {
+                    currentUser = null;
+                    await supabaseClient.auth.signOut();
+                }
+            } else {
+                currentUser = null;
+            }
+            updateUIForLoggedIn();
+            if(currentUser) subscribeToMessages();
+            else if(chatChannel) {
+                supabaseClient.removeChannel(chatChannel);
+                chatChannel = null;
+            }
+        }
+
+        async function register(username, password, avatarUrl) {
+            const { data: exist } = await supabaseClient.from('profiles').select('id').eq('username', username).maybeSingle();
+            if(exist) { showToast('用户名已存在', 'error'); return false; }
+            const email = `${username}@longgao.local`;
+            const { data, error } = await supabaseClient.auth.signUp({ email, password, options: { data: { username } } });
+            if(error) { showToast('注册失败: '+error.message, 'error'); return false; }
+            const { error: profileError } = await supabaseClient.from('profiles').insert({
+                id: data.user.id,
+                username: username,
+                avatar_url: avatarUrl || null,
+                level: 'normal',
+                is_banned: false,
+                last_active: new Date().toISOString()
+            });
+            if(profileError) {
+                showToast('注册失败: '+profileError.message, 'error');
+                return false;
+            }
+            showToast('注册成功！', 'success');
+            await refreshCurrentUser();
+            return true;
+        }
+
+        async function login(username, password) {
+            const email = `${username}@longgao.local`;
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if(error) { showToast('登录失败: '+error.message, 'error'); return false; }
+            await refreshCurrentUser();
+            if(currentUser && currentUser.is_banned) {
+                showToast('账号已被封禁', 'error');
+                await supabaseClient.auth.signOut();
+                currentUser = null;
+                updateUIForLoggedIn();
+                return false;
+            }
+            showToast('登录成功！', 'success');
+            await updateLastActive();
+            renderForum();
+            return true;
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            currentUser = null;
+            if(chatChannel) {
+                supabaseClient.removeChannel(chatChannel);
+                chatChannel = null;
+            }
+            updateUIForLoggedIn();
+            showToast('已退出', 'info');
+            renderForum();
+        }
+
+        function updateUIForLoggedIn() {
+            document.getElementById('btnLogin').style.display = currentUser ? 'none' : '';
+            document.getElementById('btnRegister').style.display = currentUser ? 'none' : '';
+            const badge = document.getElementById('loggedInBadge');
+            if(currentUser) {
+                badge.style.display = 'flex';
+                badge.innerHTML = `
+                    <span class="user-badge" onclick="showUserMenu()">
+                        <img src="${getAvatarURL(currentUser)}" class="${getAvatarFrameClass(currentUser.level)}" onerror="this.src='${getAvatarURL({username:'?'})}'">
+                        <span>${currentUser.username} ${getBadgeHTML(currentUser.level, currentUser.is_admin)}</span>
+                    </span>
+                    <button class="btn" onclick="logout()" style="margin-left:4px;">退出</button>`;
+            } else {
+                badge.style.display = 'none';
+                badge.innerHTML = '';
+            }
+        }
+
+        function showUserMenu() {
+            if(!currentUser) return;
+            showModal('我的信息', `
+                <img src="${getAvatarURL(currentUser)}" style="width:80px;height:80px;border-radius:50%;display:block;margin:0 auto;">
+                <p><strong>用户名：</strong>${currentUser.username}</p>
+                <p><strong>等级：</strong>${currentUser.level}</p>
+                <p><strong>ID：</strong>${currentUser.id}</p>
+            `, null, '关闭');
+        }
+
+        // ==================== POSTS ====================
+        async function fetchPosts() {
+            let query = supabaseClient.from('posts').select('*');
+            if(selectedCategory !== '全部') query = query.eq('category', selectedCategory);
+            if(searchKeyword) query = query.or(`content.ilike.%${searchKeyword}%,category.ilike.%${searchKeyword}%`);
+            const { data: posts, error } = await query.order('created_at', { ascending: false });
+            if(error) return [];
+            const userIds = [...new Set(posts.map(p => p.user_id))];
+            const { data: profiles } = await supabaseClient.from('profiles').select('id,username,avatar_url,level').in('id', userIds);
+            const map = Object.fromEntries(profiles.map(p => [p.id, p]));
+            return posts.map(p => ({ ...p, username: map[p.user_id]?.username || '未知', avatar_url: map[p.user_id]?.avatar_url || '', level: map[p.user_id]?.level || 'normal', is_admin: map[p.user_id]?.level === 'svip_admin' }));
+        }
+
+        async function renderForum() {
+            const posts = await fetchPosts();
+            let html = currentUser ? `<button class="btn btn-primary" onclick="showNewPostModal()" style="margin-bottom:16px; background:var(--primary); border:none;">?? 发布新帖</button>` : '';
+            html += '<div class="category-tabs">';
+            CATEGORIES.forEach(cat => {
+                html += `<span class="category-tab${cat===selectedCategory?' active':''}" onclick="selectCategory('${cat}')">${cat}</span>`;
+            });
+            html += '</div>';
+            if(posts.length === 0) html += '<div style="text-align:center; padding:40px; color:#999;">暂无帖子</div>';
+            else {
+                posts.forEach(p => {
+                    const liked = currentUser && p.likes && p.likes.includes(currentUser.id);
+                    html += `
+                    <div class="post-card">
+                        <div class="post-header">
+                            <img class="post-avatar ${getAvatarFrameClass(p.level)}" src="${getAvatarURL(p)}" onerror="this.src='${getAvatarURL({username:'?'})}'">
+                            <span class="post-user">${p.username} ${getBadgeHTML(p.level, p.is_admin)}</span>
+                            <span class="post-category">?? ${p.category}</span>
+                            <span class="post-time">${humanizeTime(p.created_at)}${p.edited_at?' (已编辑)':''}</span>
+                        </div>
+                        <div class="post-content">${escapeHTML(p.content)}</div>
+                        <div class="post-actions">
+                            <button onclick="toggleLike(${p.id})">${liked?'??':'??'} ${p.likes?p.likes.length:0}</button>
+                            ${currentUser && (currentUser.id===p.user_id || currentUser.is_admin) ? `<button onclick="editPost(${p.id})">?? 编辑</button>` : ''}
+                            ${currentUser && currentUser.is_admin ? `<button onclick="deletePost(${p.id})" style="color:#ef4444;">??? 删除</button>` : ''}
+                            <button onclick="startChatWithUser('${p.user_id}','${escapeHTML(p.username)}')">?? 私聊</button>
+                        </div>
+                    </div>`;
+                });
+            }
+            document.getElementById('contentArea').innerHTML = html;
+            renderOnlineUsers();
+        }
+
+        async function createPost(content, category) {
+            if(!content) { showToast('内容不能为空','error'); return; }
+            const { error } = await supabaseClient.from('posts').insert({ user_id: currentUser.id, content, category });
+            if(error) { showToast('发帖失败','error'); return; }
+            await updateLastActive();
+            showToast('发帖成功','success');
+            renderForum();
+        }
+
+        async function editPost(postId) {
+            const { data: post } = await supabaseClient.from('posts').select('*').eq('id', postId).single();
+            if(!post) return;
+            showModal('编辑帖子', `
+                <select id="editCat">${CATEGORIES.filter(c=>c!=='全部').map(c=>`<option value="${c}" ${c===post.category?'selected':''}>${c}</option>`).join('')}</select>
+                <textarea id="editContent" rows="4">${escapeHTML(post.content)}</textarea>
+            `, async (overlay) => {
+                const content = overlay.querySelector('#editContent').value.trim();
+                const category = overlay.querySelector('#editCat').value;
+                if(!content) { showToast('内容不能为空','error'); return false; }
+                await supabaseClient.from('posts').update({ content, category, edited_at: new Date().toISOString() }).eq('id', postId);
+                await updateLastActive();
+                showToast('编辑成功','success');
+                renderForum();
+            });
+        }
+
+        async function deletePost(postId) {
+            await supabaseClient.from('posts').delete().eq('id', postId);
+            await updateLastActive();
+            showToast('帖子已删除','success');
+            renderForum();
+        }
+
+        async function toggleLike(postId) {
+            if(!currentUser) { showToast('请先登录','error'); return; }
+            const { data: post } = await supabaseClient.from('posts').select('likes').eq('id', postId).single();
+            let likes = post.likes || [];
+            const idx = likes.indexOf(currentUser.id);
+            if(idx > -1) likes.splice(idx,1); else likes.push(currentUser.id);
+            await supabaseClient.from('posts').update({ likes }).eq('id', postId);
+            await updateLastActive();
+            renderForum();
+        }
+
+        function selectCategory(cat) { selectedCategory = cat; searchKeyword = ''; document.getElementById('searchInput').value=''; renderForum(); }
+        function searchPosts() { searchKeyword = document.getElementById('searchInput').value.trim(); selectedCategory='全部'; renderForum(); }
+
+        // ==================== CHAT ====================
+        async function startChatWithUser(userId, username) {
+            if(!currentUser) { showToast('请先登录','error'); return; }
+            if(userId === currentUser.id) { showToast('不能和自己私聊','info'); return; }
+            activeChatPartnerId = userId;
+            document.getElementById('chatPartnerName').textContent = username;
+            document.getElementById('chatPanel').style.display = 'flex';
+            document.getElementById('chatPanel').classList.remove('minimized');
+            unreadCount = 0;
+            updateUnreadBadge();
+            await loadChatMessages();
+            await markMessagesAsRead();
+            document.getElementById('chatInput').focus();
+        }
+
+        async function loadChatMessages() {
+            if(!currentUser || !activeChatPartnerId) return;
+            const { data } = await supabaseClient.from('messages').select('*')
+                .or(`and(from_user_id.eq.${currentUser.id},to_user_id.eq.${activeChatPartnerId}),and(from_user_id.eq.${activeChatPartnerId},to_user_id.eq.${currentUser.id})`)
+                .order('created_at', { ascending: true });
+            const chatBody = document.getElementById('chatMessages');
+            chatBody.innerHTML = data.length === 0 ? '<div style="text-align:center;color:#999;">开始对话吧</div>' :
+                data.map(m => `<div class="chat-msg ${m.from_user_id===currentUser.id?'sent':'received'}">${escapeHTML(m.content)}<div style="font-size:0.7em; opacity:0.7; text-align:right;">${humanizeTime(m.created_at)}${m.from_user_id===currentUser.id?(m.is_read?' ??已读':' ?未读'):''}</div></div>`).join('');
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        async function sendChatMsg() {
+            if(!currentUser || !activeChatPartnerId) return;
+            const content = document.getElementById('chatInput').value.trim();
+            if(!content) return;
+            await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, to_user_id: activeChatPartnerId, content });
+            document.getElementById('chatInput').value = '';
+            await updateLastActive();
+            await loadChatMessages();
+        }
+
+        async function markMessagesAsRead() {
+            if(!currentUser || !activeChatPartnerId) return;
+            await supabaseClient.from('messages').update({ is_read: true })
+                .eq('from_user_id', activeChatPartnerId).eq('to_user_id', currentUser.id).eq('is_read', false);
+        }
+
+        function updateUnreadBadge() {
+            const badge = document.getElementById('chatUnreadBadge');
+            if(unreadCount > 0) {
+                badge.style.display = 'inline';
+                badge.textContent = unreadCount;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function subscribeToMessages() {
+            if(chatChannel) {
+                supabaseClient.removeChannel(chatChannel);
+                chatChannel = null;
+            }
+            chatChannel = supabaseClient.channel('messages')
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'messages',
+                    filter: `to_user_id=eq.${currentUser.id}`
+                }, async (payload) => {
+                    const newMsg = payload.new;
+                    if(activeChatPartnerId && newMsg.from_user_id === activeChatPartnerId) {
+                        await loadChatMessages();
+                        await markMessagesAsRead();
+                    } else {
+                        unreadCount++;
+                        updateUnreadBadge();
+                        showToast(`新私信 from ${newMsg.from_user_id}`, 'info');
+                    }
+                })
+                .subscribe();
+        }
+
+        function toggleChatPanel() { document.getElementById('chatPanel').classList.toggle('minimized'); }
+        function closeChat() { document.getElementById('chatPanel').style.display='none'; activeChatPartnerId=null; }
+
+        // ==================== ONLINE USERS ====================
+        async function renderOnlineUsers() {
+            const { data: users } = await supabaseClient.from('profiles').select('*');
+            const onlineThreshold = 5 * 60 * 1000;
+            const now = Date.now();
+            let html = '';
+            (users||[]).forEach(u => {
+                const isOnline = (u.last_active && (now - new Date(u.last_active).getTime()) < onlineThreshold) || (currentUser && u.id === currentUser.id);
+                html += `<div class="online-user-item" onclick="viewProfile('${u.id}')">
+                    <span class="online-dot ${isOnline?'online':'offline'}"></span>
+                    <img src="${getAvatarURL(u)}" style="width:28px;height:28px;border-radius:50%;" onerror="this.src='${getAvatarURL({username:'?'})}'">
+                    <span>${u.username} ${u.level==='svip_admin'?'??':u.level==='diamond'?'??':''}</span>
+                </div>`;
+            });
+            document.getElementById('onlineUserList').innerHTML = html;
+        }
+
+        async function viewProfile(userId) {
+            const { data: user } = await supabaseClient.from('profiles').select('*').eq('id', userId).single();
+            if(!user) return;
+            const { data: posts } = await supabaseClient.from('posts').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+            document.getElementById('contentArea').innerHTML = `
+                <div style="background:#fff; border-radius:14px; padding:24px;">
+                    <button class="btn" onclick="showForum()" style="color:var(--primary); border-color:var(--primary);">← 返回</button>
+                    <div style="display:flex; gap:16px; align-items:center; margin-top:12px;">
+                        <img src="${getAvatarURL(user)}" class="${getAvatarFrameClass(user.level)}" style="width:90px;height:90px;border-radius:50%;">
+                        <div>
+                            <h2>${user.username} ${getBadgeHTML(user.level, user.level==='svip_admin')}</h2>
+                            <p>注册于 ${new Date(user.created_at).toLocaleDateString('zh-CN')}</p>
+                            ${currentUser && currentUser.id!==user.id ? `<button class="btn btn-primary" onclick="startChatWithUser('${user.id}','${escapeHTML(user.username)}')">?? 私聊</button>` : ''}
+                        </div>
+                    </div>
+                    <h3 style="margin-top:20px;">发帖记录</h3>
+                    ${posts.length===0 ? '<p style="color:#999;">暂无</p>' : posts.map(p => `<div style="border-bottom:1px solid #eee; padding:8px 0;">${escapeHTML(p.content.substring(0,100))} ... <span style="color:#999; font-size:0.8em;">${humanizeTime(p.created_at)}</span></div>`).join('')}
+                </div>`;
+        }
+
+        function showForum() { document.getElementById('contentArea').innerHTML=''; renderForum(); }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+        // ==================== MODALS ====================
+        function showLoginModal() {
+            showModal('登录', `
+                <input id="loginUser" placeholder="用户名">
+                <input id="loginPass" type="password" placeholder="密码">
+            `, async (overlay) => {
+                const u = overlay.querySelector('#loginUser').value.trim();
+                const p = overlay.querySelector('#loginPass').value.trim();
+                if(!u||!p) { showToast('请输入完整','error'); return false; }
+                return await login(u, p);
+            });
+        }
+        function showRegisterModal() {
+            showModal('注册', `
+                <input id="regUser" placeholder="用户名 (3-20字符)">
+                <input id="regPass" type="password" placeholder="密码 (至少6位)">
+                <input id="regAvatar" placeholder="头像URL (可选)">
+            `, async (overlay) => {
+                const u = overlay.querySelector('#regUser').value.trim();
+                const p = overlay.querySelector('#regPass').value.trim();
+                const a = overlay.querySelector('#regAvatar').value.trim();
+                if(u.length<3||u.length>20) { showToast('用户名3-20字符','error'); return false; }
+                if(p.length<6) { showToast('密码至少6位','error'); return false; }
+                return await register(u, p, a);
+            });
+        }
+        function showNewPostModal() {
+            showModal('发帖', `
+                <select id="postCat">${CATEGORIES.filter(c=>c!=='全部').map(c=>`<option>${c}</option>`).join('')}</select>
+                <textarea id="postContent" rows="4" placeholder="内容..."></textarea>
+            `, async (overlay) => {
+                const cat = overlay.querySelector('#postCat').value;
+                const content = overlay.querySelector('#postContent').value.trim();
+                if(!content) { showToast('内容不能为空','error'); return false; }
+                await createPost(content, cat);
+            });
+        }
+
+        // ==================== INIT ====================
+        async function init() {
+            await refreshCurrentUser();
+            renderForum();
+            setInterval(async () => {
+                if(currentUser) await updateLastActive();
+                renderOnlineUsers();
+            }, 30000);
+        }
+        init();
+    </script>
+</body>
+</html>
