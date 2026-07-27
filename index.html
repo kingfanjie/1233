@@ -7,24 +7,13 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --primary: #7c3aed;
-            --primary-dark: #5b21b6;
-            --primary-light: #a78bfa;
-            --primary-bg: #f5f0ff;
-            --primary-surface: #ede9fe;
-            --gold: #f59e0b;
-            --diamond: #06b6d4;
-            --danger: #ef4444;
-            --success: #10b981;
-            --text: #1e1b4b;
-            --text-secondary: #6b7280;
-            --bg: #faf8ff;
-            --card: #ffffff;
-            --border: #e0d8f0;
+            --primary: #7c3aed; --primary-dark: #5b21b6; --primary-light: #a78bfa;
+            --primary-bg: #f5f0ff; --primary-surface: #ede9fe; --gold: #f59e0b;
+            --diamond: #06b6d4; --danger: #ef4444; --success: #10b981;
+            --text: #1e1b4b; --text-secondary: #6b7280; --bg: #faf8ff;
+            --card: #ffffff; --border: #e0d8f0;
             --shadow: 0 4px 24px rgba(124, 58, 237, 0.10);
-            --radius: 14px;
-            --radius-sm: 8px;
-            --transition: 0.2s ease;
+            --radius: 14px; --radius-sm: 8px; --transition: 0.2s ease;
             --font: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
@@ -62,7 +51,7 @@
         .post-card .post-user { font-weight:700; }
         .post-card .post-category { font-size:0.75em; padding:3px 10px; border-radius:15px; background:var(--primary-surface); color:var(--primary-dark); font-weight:600; }
         .post-card .post-time { font-size:0.78em; color:var(--text-secondary); }
-        .post-card .post-content { margin:6px 0; color:#374151; }
+        .post-card .post-content { margin:6px 0; color:#374151; white-space:pre-wrap; }
         .post-card .post-actions { display:flex; gap:16px; margin-top:8px; flex-wrap:wrap; }
         .post-card .post-actions button { background:none; border:none; cursor:pointer; font-size:0.85em; color:var(--text-secondary); display:flex; align-items:center; gap:4px; }
         .post-card .post-actions button:hover { color:var(--primary); }
@@ -73,7 +62,7 @@
         .avatar-frame-svip { border:3px solid #fbbf24 !important; box-shadow:0 0 14px rgba(251,191,36,0.5) !important; }
         .avatar-frame-diamond { border:3px solid #06b6d4 !important; box-shadow:0 0 10px rgba(6,182,212,0.35) !important; }
         .modal-overlay { position:fixed; inset:0; background:rgba(30,27,75,0.6); z-index:200; display:flex; align-items:center; justify-content:center; }
-        .modal { background:#fff; border-radius:var(--radius); padding:28px 24px; width:90%; max-width:480px; box-shadow:0 20px 50px rgba(0,0,0,0.25); max-height:85vh; overflow-y:auto; }
+        .modal { background:#fff; border-radius:var(--radius); padding:28px 24px; width:90%; max-width:600px; box-shadow:0 20px 50px rgba(0,0,0,0.25); max-height:85vh; overflow-y:auto; }
         .modal input, .modal textarea, .modal select { width:100%; padding:11px 14px; margin:8px 0 14px; border:2px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font); }
         .toast-container { position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
         .toast { padding:12px 20px; border-radius:25px; color:#fff; font-weight:600; animation:slideIn 0.3s; background:var(--primary); }
@@ -97,6 +86,11 @@
             .mobile-sidebar-toggle { display:block; }
             .chat-panel { width:calc(100vw - 20px); right:10px; }
         }
+        .comments-section { margin-top:16px; border-top:1px solid var(--border); padding-top:12px; }
+        .comment-item { padding:8px 0; border-bottom:1px dashed #eee; display:flex; gap:8px; align-items:flex-start; }
+        .comment-avatar { width:28px; height:28px; border-radius:50%; object-fit:cover; flex-shrink:0; }
+        .comment-content { flex:1; font-size:0.9em; }
+        .comment-time { font-size:0.75em; color:var(--text-secondary); }
     </style>
 </head>
 <body>
@@ -139,21 +133,20 @@
     </div>
 
     <script>
-        // ==================== SUPABASE CONFIG ====================
+        // ==================== SUPABASE 配置 ====================
         const SUPABASE_URL = 'https://ehwdppaieqtqmfrmshat.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVod2RwcGFpZXF0cW1mcm1zaGF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwODY0NDgsImV4cCI6MjEwMDY2MjQ0OH0.oXVVfpxmlOJ0Mz3iMajLx5umJvNXc0IvSfDv7rJFtX0';
-        // 改用 supabaseClient 避免与全局 window.supabase 冲突
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let currentUser = null;
         let activeChatPartnerId = null;
         let selectedCategory = '全部';
         let searchKeyword = '';
-        let unreadCount = 0;
         let chatChannel = null;
+        let postsChannel = null;
         const CATEGORIES = ['全部', '学习交流', '考试资讯', '校园生活', '资源共享', '其他'];
 
-        // ==================== TOAST & MODAL ====================
+        // ==================== 工具函数 ====================
         function showToast(msg, type='info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -177,9 +170,9 @@
                 </div>`;
             container.appendChild(overlay);
             overlay.querySelector('.cancel-btn').addEventListener('click', ()=> overlay.remove());
-            overlay.querySelector('.confirm-btn').addEventListener('click', ()=>{
+            overlay.querySelector('.confirm-btn').addEventListener('click', async ()=>{
                 if(onConfirm) {
-                    const result = onConfirm(overlay);
+                    const result = await onConfirm(overlay);
                     if(result !== false) overlay.remove();
                 } else overlay.remove();
             });
@@ -213,7 +206,7 @@
             return '';
         }
 
-        // ==================== AUTH ====================
+        // ==================== 认证 ====================
         async function updateLastActive() {
             if(!currentUser) return;
             await supabaseClient.from('profiles').update({ last_active: new Date().toISOString() }).eq('id', currentUser.id);
@@ -241,10 +234,12 @@
                 currentUser = null;
             }
             updateUIForLoggedIn();
-            if(currentUser) subscribeToMessages();
-            else if(chatChannel) {
-                supabaseClient.removeChannel(chatChannel);
-                chatChannel = null;
+            if(currentUser) {
+                subscribeToMessages();
+                subscribeToPosts();
+            } else {
+                if(chatChannel) { supabaseClient.removeChannel(chatChannel); chatChannel = null; }
+                if(postsChannel) { supabaseClient.removeChannel(postsChannel); postsChannel = null; }
             }
         }
 
@@ -254,7 +249,7 @@
             const email = `${username}@longgao.local`;
             const { data, error } = await supabaseClient.auth.signUp({ email, password, options: { data: { username } } });
             if(error) { showToast('注册失败: '+error.message, 'error'); return false; }
-            const { error: profileError } = await supabaseClient.from('profiles').insert({
+            await supabaseClient.from('profiles').upsert({
                 id: data.user.id,
                 username: username,
                 avatar_url: avatarUrl || null,
@@ -262,10 +257,6 @@
                 is_banned: false,
                 last_active: new Date().toISOString()
             });
-            if(profileError) {
-                showToast('注册失败: '+profileError.message, 'error');
-                return false;
-            }
             showToast('注册成功！', 'success');
             await refreshCurrentUser();
             return true;
@@ -292,10 +283,8 @@
         async function logout() {
             await supabaseClient.auth.signOut();
             currentUser = null;
-            if(chatChannel) {
-                supabaseClient.removeChannel(chatChannel);
-                chatChannel = null;
-            }
+            if(chatChannel) { supabaseClient.removeChannel(chatChannel); chatChannel = null; }
+            if(postsChannel) { supabaseClient.removeChannel(postsChannel); postsChannel = null; }
             updateUIForLoggedIn();
             showToast('已退出', 'info');
             renderForum();
@@ -329,7 +318,7 @@
             `, null, '关闭');
         }
 
-        // ==================== POSTS ====================
+        // ==================== 帖子核心 ====================
         async function fetchPosts() {
             let query = supabaseClient.from('posts').select('*');
             if(selectedCategory !== '全部') query = query.eq('category', selectedCategory);
@@ -368,6 +357,7 @@
                             ${currentUser && (currentUser.id===p.user_id || currentUser.is_admin) ? `<button onclick="editPost(${p.id})">✏️ 编辑</button>` : ''}
                             ${currentUser && currentUser.is_admin ? `<button onclick="deletePost(${p.id})" style="color:#ef4444;">🗑️ 删除</button>` : ''}
                             <button onclick="startChatWithUser('${p.user_id}','${escapeHTML(p.username)}')">💬 私聊</button>
+                            <button onclick="viewPostDetail(${p.id})">💬 评论</button>
                         </div>
                     </div>`;
                 });
@@ -376,13 +366,56 @@
             renderOnlineUsers();
         }
 
+        // 点赞：乐观更新UI + 异步同步云端
+        async function toggleLike(postId) {
+            if(!currentUser) { showToast('请先登录','error'); return; }
+
+            // 1. 获取当前帖子数据
+            const { data: post, error } = await supabaseClient.from('posts').select('likes').eq('id', postId).single();
+            if(error) { showToast('操作失败', 'error'); return; }
+
+            let likes = post.likes || [];
+            const index = likes.indexOf(currentUser.id);
+            const hasLiked = index > -1;
+
+            // 2. 乐观更新本地 UI（列表页和详情页按钮）
+            const updateUIButton = (liked, count) => {
+                // 列表页按钮
+                document.querySelectorAll(`.post-card .post-actions button[onclick="toggleLike(${postId})"]`).forEach(btn => {
+                    btn.innerHTML = `${liked?'❤️':'🤍'} ${count}`;
+                });
+                // 详情页按钮（如果存在）
+                const detailBtn = document.getElementById(`detail-like-${postId}`);
+                if(detailBtn) {
+                    detailBtn.innerHTML = `${liked?'❤️':'🤍'} ${count}`;
+                }
+            };
+
+            // 3. 更新本地 likes 数组并立即更新 UI
+            if(hasLiked) {
+                likes.splice(index, 1);
+            } else {
+                likes.push(currentUser.id);
+            }
+            updateUIButton(!hasLiked, likes.length);
+
+            // 4. 异步向 Supabase 发送更新
+            const { error: updateError } = await supabaseClient.from('posts').update({ likes }).eq('id', postId);
+            if(updateError) {
+                // 回滚 UI
+                updateUIButton(hasLiked, post.likes.length);
+                showToast('点赞失败，请重试', 'error');
+            } else {
+                await updateLastActive();
+            }
+        }
+
         async function createPost(content, category) {
             if(!content) { showToast('内容不能为空','error'); return; }
             const { error } = await supabaseClient.from('posts').insert({ user_id: currentUser.id, content, category });
             if(error) { showToast('发帖失败','error'); return; }
             await updateLastActive();
             showToast('发帖成功','success');
-            renderForum();
         }
 
         async function editPost(postId) {
@@ -398,7 +431,6 @@
                 await supabaseClient.from('posts').update({ content, category, edited_at: new Date().toISOString() }).eq('id', postId);
                 await updateLastActive();
                 showToast('编辑成功','success');
-                renderForum();
             });
         }
 
@@ -406,24 +438,101 @@
             await supabaseClient.from('posts').delete().eq('id', postId);
             await updateLastActive();
             showToast('帖子已删除','success');
-            renderForum();
-        }
-
-        async function toggleLike(postId) {
-            if(!currentUser) { showToast('请先登录','error'); return; }
-            const { data: post } = await supabaseClient.from('posts').select('likes').eq('id', postId).single();
-            let likes = post.likes || [];
-            const idx = likes.indexOf(currentUser.id);
-            if(idx > -1) likes.splice(idx,1); else likes.push(currentUser.id);
-            await supabaseClient.from('posts').update({ likes }).eq('id', postId);
-            await updateLastActive();
-            renderForum();
         }
 
         function selectCategory(cat) { selectedCategory = cat; searchKeyword = ''; document.getElementById('searchInput').value=''; renderForum(); }
         function searchPosts() { searchKeyword = document.getElementById('searchInput').value.trim(); selectedCategory='全部'; renderForum(); }
 
-        // ==================== CHAT ====================
+        // ==================== 评论 ====================
+        async function fetchComments(postId) {
+            const { data, error } = await supabaseClient.from('comments')
+                .select('*, profiles(username, avatar_url, level)')
+                .eq('post_id', postId)
+                .order('created_at', { ascending: true });
+            if(error) return [];
+            return data;
+        }
+
+        async function addComment(postId, content) {
+            if(!content.trim()) { showToast('评论不能为空','error'); return; }
+            const { error } = await supabaseClient.from('comments').insert({
+                post_id: postId,
+                user_id: currentUser.id,
+                content: content.trim()
+            });
+            if(error) { showToast('评论失败','error'); }
+            else {
+                await updateLastActive();
+                const commentsList = document.getElementById(`commentsList-${postId}`);
+                if(commentsList) loadCommentsForPost(postId, commentsList);
+            }
+        }
+
+        async function deleteComment(commentId, postId) {
+            await supabaseClient.from('comments').delete().eq('id', commentId);
+            const commentsList = document.getElementById(`commentsList-${postId}`);
+            if(commentsList) loadCommentsForPost(postId, commentsList);
+        }
+
+        async function loadCommentsForPost(postId, container) {
+            const comments = await fetchComments(postId);
+            container.innerHTML = comments.map(c => `
+                <div class="comment-item">
+                    <img class="comment-avatar" src="${getAvatarURL(c.profiles)}" onerror="this.src='${getAvatarURL({username:'?'})}'">
+                    <div class="comment-content">
+                        <strong>${c.profiles?.username || '未知'}</strong> ${getBadgeHTML(c.profiles?.level, c.profiles?.level==='svip_admin')}
+                        <div>${escapeHTML(c.content)}</div>
+                        <div class="comment-time">${humanizeTime(c.created_at)}</div>
+                    </div>
+                    ${(currentUser && (currentUser.id === c.user_id || currentUser.is_admin)) ? 
+                        `<button onclick="deleteComment(${c.id}, ${postId})" style="background:none;border:none;color:var(--danger);cursor:pointer;">🗑️</button>` : ''}
+                </div>
+            `).join('');
+            if(comments.length === 0) container.innerHTML = '<div style="color:#999;">暂无评论</div>';
+            if(currentUser) {
+                const inputDiv = document.createElement('div');
+                inputDiv.className = 'chat-input-row';
+                inputDiv.innerHTML = `
+                    <input type="text" id="commentInput-${postId}" placeholder="写下你的评论...">
+                    <button onclick="addComment(${postId}, document.getElementById('commentInput-${postId}').value); document.getElementById('commentInput-${postId}').value='';">发送</button>
+                `;
+                container.appendChild(inputDiv);
+            }
+        }
+
+        // ==================== 帖子详情 ====================
+        async function viewPostDetail(postId) {
+            const { data: post } = await supabaseClient.from('posts').select('*').eq('id', postId).single();
+            if(!post) return;
+            const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', post.user_id).single();
+            const liked = currentUser && post.likes?.includes(currentUser.id);
+            document.getElementById('contentArea').innerHTML = `
+                <div style="background:#fff; border-radius:var(--radius); padding:24px;">
+                    <button class="btn" onclick="showForum()" style="color:var(--primary); border-color:var(--primary);">← 返回</button>
+                    <div class="post-card" style="margin-top:16px; box-shadow:none; border:none; padding:0;">
+                        <div class="post-header">
+                            <img class="post-avatar ${getAvatarFrameClass(profile?.level)}" src="${getAvatarURL(profile)}" onerror="this.src='${getAvatarURL({username:'?'})}'">
+                            <span class="post-user">${profile?.username || '未知'} ${getBadgeHTML(profile?.level, profile?.level==='svip_admin')}</span>
+                            <span class="post-category">📌 ${post.category}</span>
+                            <span class="post-time">${humanizeTime(post.created_at)}${post.edited_at?' (已编辑)':''}</span>
+                        </div>
+                        <div class="post-content" style="white-space:pre-wrap;">${escapeHTML(post.content)}</div>
+                        <div class="post-actions" style="margin-top:12px;">
+                            <button id="detail-like-${post.id}" onclick="toggleLike(${post.id})">${liked?'❤️':'🤍'} ${post.likes?.length || 0}</button>
+                            ${currentUser && (currentUser.id===post.user_id || currentUser.is_admin) ? `<button onclick="editPost(${post.id})">✏️ 编辑</button>` : ''}
+                            ${currentUser && currentUser.is_admin ? `<button onclick="deletePost(${post.id})" style="color:#ef4444;">🗑️ 删除</button>` : ''}
+                        </div>
+                    </div>
+                    <div class="comments-section" id="comments-${post.id}">
+                        <h4>评论</h4>
+                        <div id="commentsList-${post.id}"></div>
+                    </div>
+                </div>
+            `;
+            loadCommentsForPost(post.id, document.getElementById(`commentsList-${post.id}`));
+        }
+
+        // ==================== 私聊 ====================
         async function startChatWithUser(userId, username) {
             if(!currentUser) { showToast('请先登录','error'); return; }
             if(userId === currentUser.id) { showToast('不能和自己私聊','info'); return; }
@@ -431,8 +540,6 @@
             document.getElementById('chatPartnerName').textContent = username;
             document.getElementById('chatPanel').style.display = 'flex';
             document.getElementById('chatPanel').classList.remove('minimized');
-            unreadCount = 0;
-            updateUnreadBadge();
             await loadChatMessages();
             await markMessagesAsRead();
             document.getElementById('chatInput').focus();
@@ -456,7 +563,6 @@
             await supabaseClient.from('messages').insert({ from_user_id: currentUser.id, to_user_id: activeChatPartnerId, content });
             document.getElementById('chatInput').value = '';
             await updateLastActive();
-            await loadChatMessages();
         }
 
         async function markMessagesAsRead() {
@@ -465,52 +571,54 @@
                 .eq('from_user_id', activeChatPartnerId).eq('to_user_id', currentUser.id).eq('is_read', false);
         }
 
-        function updateUnreadBadge() {
-            const badge = document.getElementById('chatUnreadBadge');
-            if(unreadCount > 0) {
-                badge.style.display = 'inline';
-                badge.textContent = unreadCount;
-            } else {
-                badge.style.display = 'none';
-            }
-        }
-
-        function subscribeToMessages() {
-            if(chatChannel) {
-                supabaseClient.removeChannel(chatChannel);
-                chatChannel = null;
-            }
-            chatChannel = supabaseClient.channel('messages')
-                .on('postgres_changes', {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'messages',
-                    filter: `to_user_id=eq.${currentUser.id}`
-                }, async (payload) => {
-                    const newMsg = payload.new;
-                    if(activeChatPartnerId && newMsg.from_user_id === activeChatPartnerId) {
-                        await loadChatMessages();
-                        await markMessagesAsRead();
-                    } else {
-                        unreadCount++;
-                        updateUnreadBadge();
-                        showToast(`新私信 from ${newMsg.from_user_id}`, 'info');
-                    }
-                })
-                .subscribe();
-        }
-
         function toggleChatPanel() { document.getElementById('chatPanel').classList.toggle('minimized'); }
         function closeChat() { document.getElementById('chatPanel').style.display='none'; activeChatPartnerId=null; }
 
-        // ==================== ONLINE USERS ====================
+        // ==================== 实时订阅 ====================
+        function subscribeToMessages() {
+            if(chatChannel) supabaseClient.removeChannel(chatChannel);
+            chatChannel = supabaseClient.channel('messages')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `to_user_id=eq.${currentUser.id}` },
+                async (payload) => {
+                    if(activeChatPartnerId && payload.new.from_user_id === activeChatPartnerId) {
+                        await loadChatMessages();
+                        await markMessagesAsRead();
+                    } else {
+                        showToast('新私信！', 'info');
+                    }
+                }).subscribe();
+        }
+
+        function subscribeToPosts() {
+            if(postsChannel) supabaseClient.removeChannel(postsChannel);
+            postsChannel = supabaseClient.channel('posts-realtime')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => {
+                    // 仅当在论坛主页或需要全量刷新时才调用 renderForum
+                    const contentArea = document.getElementById('contentArea');
+                    if(contentArea.querySelector('.category-tabs') || contentArea.querySelector('.post-card')) {
+                        renderForum();
+                    } else {
+                        // 如果在详情页，可能需要局部刷新（比如点赞数），这里暂不处理，由 toggleLike 的 UI 更新负责
+                    }
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, (payload) => {
+                    const detailContainer = document.getElementById('contentArea').querySelector('[id^="comments-"]');
+                    if(detailContainer) {
+                        const postId = detailContainer.id.split('-')[1];
+                        const commentsList = document.getElementById(`commentsList-${postId}`);
+                        if(commentsList) loadCommentsForPost(postId, commentsList);
+                    }
+                }).subscribe();
+        }
+
+        // ==================== 在线用户 ====================
         async function renderOnlineUsers() {
             const { data: users } = await supabaseClient.from('profiles').select('*');
             const onlineThreshold = 5 * 60 * 1000;
             const now = Date.now();
             let html = '';
             (users||[]).forEach(u => {
-                const isOnline = (u.last_active && (now - new Date(u.last_active).getTime()) < onlineThreshold) || (currentUser && u.id === currentUser.id);
+                const isOnline = (u.last_active && (now - new Date(u.last_active).getTime()) < onlineThreshold);
                 html += `<div class="online-user-item" onclick="viewProfile('${u.id}')">
                     <span class="online-dot ${isOnline?'online':'offline'}"></span>
                     <img src="${getAvatarURL(u)}" style="width:28px;height:28px;border-radius:50%;" onerror="this.src='${getAvatarURL({username:'?'})}'">
@@ -543,7 +651,7 @@
         function showForum() { document.getElementById('contentArea').innerHTML=''; renderForum(); }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
-        // ==================== MODALS ====================
+        // ==================== 弹窗 ====================
         function showLoginModal() {
             showModal('登录', `
                 <input id="loginUser" placeholder="用户名">
@@ -581,7 +689,29 @@
             });
         }
 
-        // ==================== INIT ====================
+        // 全局函数挂载
+        window.toggleLike = toggleLike;
+        window.addComment = addComment;
+        window.deleteComment = deleteComment;
+        window.viewPostDetail = viewPostDetail;
+        window.startChatWithUser = startChatWithUser;
+        window.editPost = editPost;
+        window.deletePost = deletePost;
+        window.toggleSidebar = toggleSidebar;
+        window.showForum = showForum;
+        window.searchPosts = searchPosts;
+        window.selectCategory = selectCategory;
+        window.showLoginModal = showLoginModal;
+        window.showRegisterModal = showRegisterModal;
+        window.showNewPostModal = showNewPostModal;
+        window.logout = logout;
+        window.toggleChatPanel = toggleChatPanel;
+        window.closeChat = closeChat;
+        window.sendChatMsg = sendChatMsg;
+        window.viewProfile = viewProfile;
+        window.showUserMenu = showUserMenu;
+
+        // ==================== 初始化 ====================
         async function init() {
             await refreshCurrentUser();
             renderForum();
