@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>🎁 光遇 · 生日礼物</title>
+    <style>
+        /* ===== 全局重置 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #0b0e1a;
+            font-family: 'Segoe UI', 'PingFang SC', 'Helvetica Neue', sans-serif;
+            touch-action: manipulation;
+        }
+
+        /* ===== 主容器 ===== */
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background: #0b0e1a;
+        }
+
+        /* ===== 图片容器 ===== */
+        .image-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background: #0b0e1a;
+        }
+
+        /* ===== 横屏图片 ===== */
+        .image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* 充盈屏幕，锁定比例，不拉伸 */
+            object-position: center center;
+            display: block;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        /* ===== 图片加载占位 ===== */
+        .image-wrapper .placeholder {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, #1a1e3a, #0b0e1a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+            letter-spacing: 4px;
+            z-index: 1;
+            transition: opacity 0.8s ease;
+        }
+        .image-wrapper img.loaded+.placeholder {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* ===== 光晕叠加层 ===== */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        /* 光晕 - 金色 */
+        .glow-gold {
+            position: absolute;
+            width: 60%;
+            height: 60%;
+            top: 10%;
+            right: -10%;
+            background: radial-gradient(circle, rgba(247, 183, 49, 0.25) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(60px);
+            animation: breathe 5s ease-in-out infinite alternate;
+        }
+
+        /* 光晕 - 紫色 */
+        .glow-purple {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            bottom: 5%;
+            left: -10%;
+            background: radial-gradient(circle, rgba(124, 77, 255, 0.20) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(60px);
+            animation: breathe 6s ease-in-out infinite alternate-reverse;
+        }
+
+        /* 光晕 - 暖白 */
+        .glow-warm {
+            position: absolute;
+            width: 40%;
+            height: 40%;
+            top: 40%;
+            left: 30%;
+            background: radial-gradient(circle, rgba(255, 200, 120, 0.12) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(70px);
+            animation: breathe 7s ease-in-out infinite alternate;
+        }
+
+        @keyframes breathe {
+            0% {
+                opacity: 0.5;
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        /* ===== 光点（星星） ===== */
+        .sparkle {
+            position: absolute;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 0 12px 2px rgba(247, 183, 49, 0.3);
+            animation: sparkleAnim var(--dur, 3s) ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        .sparkle:nth-child(1) {
+            width: 6px;
+            height: 6px;
+            top: 12%;
+            left: 8%;
+            --dur: 2.8s;
+            animation-delay: 0.2s;
+        }
+        .sparkle:nth-child(2) {
+            width: 4px;
+            height: 4px;
+            top: 25%;
+            right: 15%;
+            --dur: 3.6s;
+            animation-delay: 0.8s;
+            box-shadow: 0 0 10px 1px rgba(124, 77, 255, 0.4);
+        }
+        .sparkle:nth-child(3) {
+            width: 5px;
+            height: 5px;
+            top: 55%;
+            left: 20%;
+            --dur: 4.2s;
+            animation-delay: 0.5s;
+        }
+        .sparkle:nth-child(4) {
+            width: 3px;
+            height: 3px;
+            top: 70%;
+            right: 25%;
+            --dur: 3.0s;
+            animation-delay: 1.2s;
+            box-shadow: 0 0 8px 1px rgba(247, 183, 49, 0.5);
+        }
+        .sparkle:nth-child(5) {
+            width: 7px;
+            height: 7px;
+            top: 40%;
+            left: 65%;
+            --dur: 3.8s;
+            animation-delay: 0.1s;
+        }
+        .sparkle:nth-child(6) {
+            width: 4px;
+            height: 4px;
+            top: 15%;
+            left: 45%;
+            --dur: 4.5s;
+            animation-delay: 1.5s;
+            box-shadow: 0 0 12px 2px rgba(255, 200, 120, 0.3);
+        }
+        .sparkle:nth-child(7) {
+            width: 5px;
+            height: 5px;
+            bottom: 20%;
+            left: 10%;
+            --dur: 3.2s;
+            animation-delay: 0.9s;
+        }
+        .sparkle:nth-child(8) {
+            width: 3px;
+            height: 3px;
+            bottom: 30%;
+            right: 8%;
+            --dur: 4.0s;
+            animation-delay: 0.4s;
+            box-shadow: 0 0 8px 1px rgba(124, 77, 255, 0.3);
+        }
+
+        @keyframes sparkleAnim {
+            0% {
+                opacity: 0.15;
+                transform: scale(0.6);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1.4);
+            }
+        }
+
+        /* ===== 光之翼装饰（简化） ===== */
+        .wing-deco {
+            position: absolute;
+            font-size: 40px;
+            opacity: 0.08;
+            pointer-events: none;
+            animation: floatWing 12s ease-in-out infinite alternate;
+            filter: drop-shadow(0 0 20px rgba(247, 183, 49, 0.1));
+        }
+        .wing-deco.left {
+            left: 5%;
+            bottom: 20%;
+            transform: rotate(-15deg);
+            animation-delay: 0s;
+        }
+        .wing-deco.right {
+            right: 5%;
+            bottom: 20%;
+            transform: rotate(15deg) scaleX(-1);
+            animation-delay: 3s;
+        }
+
+        @keyframes floatWing {
+            0% {
+                transform: translateY(0px) scale(1) rotate(-15deg);
+                opacity: 0.06;
+            }
+            50% {
+                opacity: 0.12;
+            }
+            100% {
+                transform: translateY(-20px) scale(1.05) rotate(-15deg);
+                opacity: 0.06;
+            }
+        }
+
+        /* ===== 底部文字区域 ===== */
+        .text-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 3;
+            padding: 28px 24px 32px;
+            background: linear-gradient(to top,
+                    rgba(11, 14, 26, 0.85) 0%,
+                    rgba(11, 14, 26, 0.50) 50%,
+                    transparent 100%);
+            text-align: center;
+            pointer-events: none;
+            /* 让点击穿透 */;
+        }
+
+        .text-overlay .main-text {
+            display: block;
+            font-size: clamp(20px, 5.5vw, 44px);
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow:
+                0 0 30px rgba(247, 183, 49, 0.25),
+                0 0 60px rgba(247, 183, 49, 0.10),
+                0 4px 20px rgba(0, 0, 0, 0.5);
+            letter-spacing: 2px;
+            line-height: 1.5;
+            animation: textGlow 3s ease-in-out infinite alternate;
+        }
+
+        .text-overlay .main-text .highlight {
+            background: linear-gradient(135deg, #f7b731, #f5a623, #f7b731);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: none;
+            filter: drop-shadow(0 0 20px rgba(247, 183, 49, 0.25));
+            animation: highlightPulse 2.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes textGlow {
+            0% {
+                text-shadow: 0 0 20px rgba(247, 183, 49, 0.15), 0 4px 20px rgba(0, 0, 0, 0.4);
+            }
+            100% {
+                text-shadow: 0 0 40px rgba(247, 183, 49, 0.30), 0 4px 30px rgba(0, 0, 0, 0.6);
+            }
+        }
+
+        @keyframes highlightPulse {
+            0% {
+                filter: drop-shadow(0 0 10px rgba(247, 183, 49, 0.15));
+            }
+            100% {
+                filter: drop-shadow(0 0 30px rgba(247, 183, 49, 0.40));
+            }
+        }
+
+        /* ===== 底部小装饰 ===== */
+        .text-overlay .sub-deco {
+            display: block;
+            margin-top: 8px;
+            font-size: clamp(12px, 2vw, 18px);
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 8px;
+            font-weight: 300;
+        }
+
+        .text-overlay .sub-deco span {
+            display: inline-block;
+            animation: shimmerDeco 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmerDeco {
+            0%,
+            100% {
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        /* ===== 左下角光遇小标志 ===== */
+        .sky-logo {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            z-index: 4;
+            color: rgba(255, 255, 255, 0.06);
+            font-size: 12px;
+            letter-spacing: 4px;
+            pointer-events: none;
+            font-weight: 300;
+        }
+
+        /* ===== 响应式微调 ===== */
+        @media (orientation: portrait) {
+            /* 竖屏时，文字稍微调整 */
+            .text-overlay {
+                padding: 20px 20px 28px;
+            }
+            .text-overlay .main-text {
+                font-size: clamp(18px, 5vw, 34px);
+            }
+            .wing-deco {
+                font-size: 28px;
+            }
+            .wing-deco.left {
+                left: 2%;
+                bottom: 15%;
+            }
+            .wing-deco.right {
+                right: 2%;
+                bottom: 15%;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 500px) {
+            /* 横屏且高度较小时，文字调小 */
+            .text-overlay {
+                padding: 12px 20px 16px;
+            }
+            .text-overlay .main-text {
+                font-size: clamp(14px, 3.5vw, 28px);
+            }
+            .text-overlay .sub-deco {
+                font-size: 10px;
+                margin-top: 4px;
+            }
+            .wing-deco {
+                font-size: 24px;
+            }
+            .wing-deco.left {
+                bottom: 10%;
+            }
+            .wing-deco.right {
+                bottom: 10%;
+            }
+            .sparkle {
+                display: none;
+            }
+            .glow-gold,
+            .glow-purple,
+            .glow-warm {
+                filter: blur(40px);
+            }
+        }
+
+        @media (max-width: 360px) {
+            .text-overlay .main-text {
+                font-size: clamp(16px, 4.5vw, 22px);
+            }
+            .text-overlay {
+                padding: 16px 14px 20px;
+            }
+        }
+
+        /* ===== 渐显动画 ===== */
+        .fade-in {
+            animation: fadeIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        .fade-in-d1 {
+            animation-delay: 0.2s;
+        }
+        .fade-in-d2 {
+            animation-delay: 0.5s;
+        }
+        .fade-in-d3 {
+            animation-delay: 0.8s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* ===== 图片加载完成后的额外动画 ===== */
+        .image-wrapper img.loaded {
+            animation: imageReveal 1.2s ease-out both;
+        }
+
+        @keyframes imageReveal {
+            from {
+                opacity: 0;
+                transform: scale(1.04);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- ===== 图片容器 ===== -->
+        <div class="image-wrapper" id="imageWrapper">
+
+            <!-- 占位 -->
+            <div class="placeholder" id="placeholder">
+                ✦ 星 光 降 临 ✦
+            </div>
+
+            <!-- 横屏图片（自适应，cover，锁定比例） -->
+            <img
+            id="giftImage"
+            src="./photo.png"
+            alt="光遇 · 星空"
+            crossorigin="anonymous"
+            loading="eager"
+            />
+
+            <!-- ===== 叠加光效 ===== -->
+            <div class="overlay fade-in fade-in-d1">
+                <div class="glow-gold"></div>
+                <div class="glow-purple"></div>
+                <div class="glow-warm"></div>
+
+                <!-- 光点 -->
+                <div class="sparkle"></div>
+                <div class="sparkle"></div>
+                <div class="sparkle"></div>
+                <div class="sparkle"></div>
+                <div class="sparkle"></div>
+                <div class="sparkle"></div>
+                <div class="sparkle"></div>
+                <div class="sparkle"></div>
+
+                <!-- 光之翼装饰 -->
+                <div class="wing-deco left fade-in fade-in-d2">🕊️</div>
+                <div class="wing-deco right fade-in fade-in-d2">🕊️</div>
+            </div>
+
+            <!-- ===== 底部文字 ===== -->
+            <div class="text-overlay fade-in fade-in-d3">
+                <span class="main-text">
+                    天下没有白吃的午餐，<br />
+                    <span class="highlight">远哥哥生日快乐！！</span>
+                </span>
+                <span class="sub-deco">
+                    <span>✦</span> 光 遇 之 旅 · 星 翼 为 伴 <span>✦</span>
+                </span>
+            </div>
+
+            <!-- 左下角小字 -->
+            <div class="sky-logo">✦ 光 · 遇 ✦</div>
+
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // 1. 图片加载完成处理
+        // ============================================================
+        const img = document.getElementById('giftImage');
+        const placeholder = document.getElementById('placeholder');
+
+        function onImageLoaded() {
+            img.classList.add('loaded');
+            // 占位淡出
+            if (placeholder) {
+                placeholder.style.transition = 'opacity 0.8s ease';
+                placeholder.style.opacity = '0';
+                setTimeout(() => {
+                    placeholder.style.display = 'none';
+                }, 900);
+            }
+            // 触发额外的视觉反馈
+            document.querySelector('.container').style.background = 'transparent';
+        }
+
+        // 如果图片已加载完成
+        if (img.complete && img.naturalWidth > 0) {
+            onImageLoaded();
+        } else {
+            img.addEventListener('load', onImageLoaded);
+            img.addEventListener('error', function() {
+                // 加载失败，使用备选图片
+                this.src =
+                './photo.png';
+                // 如果备选也失败，保留占位
+                this.addEventListener('error', function() {
+                    if (placeholder) {
+                        placeholder.textContent = '✦ 星 光 永 恒 ✦';
+                        placeholder.style.opacity = '0.6';
+                    }
+                });
+            });
+        }
+
+        // ============================================================
+        // 2. 预加载备选图片（后台加载）
+        // ============================================================
+        const preloadImg = new Image();
+        preloadImg.src =
+        './photo.png';
+
+        // ============================================================
+        // 3. 屏幕方向变化时，确保图片始终充盈（无额外操作，CSS已处理）
+        // ============================================================
+        // 但我们可以稍微调整一下文字大小（通过CSS已经用了clamp）
+
+        // ============================================================
+        // 4. 防止滚动 / 触摸误触
+        // ============================================================
+        document.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+
+        // ============================================================
+        // 5. 点击页面任意位置，显示一个微光反馈（趣味交互）
+        // ============================================================
+        document.addEventListener('click', function(e) {
+            // 创建一个小光点
+            const dot = document.createElement('div');
+            dot.style.cssText = `
+                    position: fixed;
+                    pointer-events: none;
+                    z-index: 999;
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    background: radial-gradient(circle, rgba(247,183,49,0.6), transparent 70%);
+                    left: ${e.clientX - 10}px;
+                    top: ${e.clientY - 10}px;
+                    transform: scale(0);
+                    animation: clickGlow 0.8s ease-out forwards;
+                `;
+            document.body.appendChild(dot);
+            setTimeout(() => dot.remove(), 900);
+        });
+
+        // 注入 clickGlow 动画
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = `
+                @keyframes clickGlow {
+                    0% { transform: scale(0); opacity: 1; }
+                    100% { transform: scale(4); opacity: 0; }
+                }
+            `;
+        document.head.appendChild(styleSheet);
+
+        // ============================================================
+        // 6. 控制台彩蛋
+        // ============================================================
+        console.log('✨ 光遇 · 生日礼物 ✨');
+        console.log('🎂 祝 远哥哥 生日快乐！');
+        console.log('🕯️ 愿星光永远照亮你的旅途');
+    </script>
+
+</body>
+</html>
