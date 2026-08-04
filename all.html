@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>光遇 · 生日惊喜</title>
+    <style>
+        /* ===== 全局重置 & 基础 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', Roboto, 'Helvetica Neue', sans-serif;
+            background: #0b0e1a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        /* ===== 星空背景 ===== */
+        .stars-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: radial-gradient(ellipse at 50% 30%, #1a1e3a 0%, #0b0e1a 70%);
+            overflow: hidden;
+        }
+
+        .star {
+            position: absolute;
+            background: #ffffff;
+            border-radius: 50%;
+            animation: twinkle var(--dur, 3s) ease-in-out infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% {
+                opacity: 0.2;
+                transform: scale(0.8);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        .shooting-star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 6px 2px rgba(255, 255, 255, 0.5);
+            animation: shoot 6s linear infinite;
+        }
+
+        .shooting-star:nth-child(1) {
+            top: 10%;
+            left: 20%;
+            animation-delay: 1s;
+        }
+        .shooting-star:nth-child(2) {
+            top: 30%;
+            left: 70%;
+            animation-delay: 3.5s;
+        }
+        .shooting-star:nth-child(3) {
+            top: 60%;
+            left: 40%;
+            animation-delay: 5.5s;
+        }
+
+        @keyframes shoot {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0;
+            }
+            5% {
+                opacity: 1;
+            }
+            20% {
+                transform: translate(-120px, 80px) scale(1.2);
+                opacity: 0.8;
+            }
+            30% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        /* ===== 云朵 ===== */
+        .cloud {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            filter: blur(40px);
+            animation: floatCloud var(--dur, 20s) ease-in-out infinite alternate;
+        }
+
+        @keyframes floatCloud {
+            0% {
+                transform: translateX(-20px) scale(1);
+            }
+            100% {
+                transform: translateX(40px) scale(1.1);
+            }
+        }
+
+        /* ===== 主容器 ===== */
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+            padding: 20px 16px 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* ===== 光晕装饰 ===== */
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        .glow-orb.gold {
+            width: 300px;
+            height: 300px;
+            background: #f7b731;
+            top: -60px;
+            right: -80px;
+            animation: pulseGlow 4s ease-in-out infinite alternate;
+        }
+
+        .glow-orb.purple {
+            width: 250px;
+            height: 250px;
+            background: #7c4dff;
+            bottom: -40px;
+            left: -60px;
+            animation: pulseGlow 5s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes pulseGlow {
+            0% {
+                opacity: 0.2;
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+        }
+
+        /* ===== 顶部装饰 ===== */
+        .header-decoration {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            width: 100%;
+        }
+
+        .header-decoration .line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(247, 183, 49, 0.4), transparent);
+            max-width: 60px;
+        }
+
+        .header-decoration .icon {
+            font-size: 20px;
+            color: #f7b731;
+            animation: spinSlow 8s linear infinite;
+        }
+
+        @keyframes spinSlow {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== 标题 ===== */
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            text-align: center;
+            text-shadow: 0 0 30px rgba(247, 183, 49, 0.3);
+            margin-bottom: 4px;
+            letter-spacing: 2px;
+        }
+
+        .title .highlight {
+            background: linear-gradient(135deg, #f7b731, #f5a623);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+            letter-spacing: 6px;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+
+        /* ===== 生日标签 ===== */
+        .birthday-tag {
+            display: inline-block;
+            background: rgba(247, 183, 49, 0.15);
+            border: 1px solid rgba(247, 183, 49, 0.25);
+            border-radius: 30px;
+            padding: 4px 18px;
+            color: #f7b731;
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+            backdrop-filter: blur(4px);
+            animation: shimmerTag 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmerTag {
+            0%,
+            100% {
+                box-shadow: 0 0 10px rgba(247, 183, 49, 0.1);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(247, 183, 49, 0.3);
+            }
+        }
+
+        /* ===== 礼物卡片 ===== */
+        .gift-card {
+            position: relative;
+            width: 100%;
+            max-width: 320px;
+            aspect-ratio: 1 / 1.1;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            padding: 24px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin-bottom: 20px;
+        }
+
+        .gift-card:hover {
+            transform: scale(1.01);
+        }
+
+        /* 礼物盒光效 */
+        .gift-card::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 32px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(247, 183, 49, 0.2), transparent 40%, transparent 60%, rgba(124, 77, 255, 0.2));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        /* ===== 皮肤图标（用 emoji + 光效模拟） ===== */
+        .skin-icon {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(247, 183, 49, 0.2), rgba(124, 77, 255, 0.1));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 52px;
+            margin-bottom: 12px;
+            box-shadow: 0 0 50px rgba(247, 183, 49, 0.15), inset 0 0 40px rgba(247, 183, 49, 0.05);
+            animation: floatIcon 3s ease-in-out infinite;
+        }
+
+        .skin-icon::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 1px solid rgba(247, 183, 49, 0.15);
+            animation: ringPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes ringPulse {
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.3;
+            }
+            50% {
+                transform: scale(1.12);
+                opacity: 0;
+            }
+        }
+
+        @keyframes floatIcon {
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+
+        /* ===== 皮肤名称 ===== */
+        .skin-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(247, 183, 49, 0.2);
+            margin-bottom: 2px;
+        }
+
+        .skin-name .light {
+            color: #f7b731;
+        }
+
+        .skin-desc {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            letter-spacing: 1px;
+            margin-bottom: 14px;
+        }
+
+        /* ===== 稀有度标签 ===== */
+        .rarity {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(247, 183, 49, 0.2), rgba(245, 166, 35, 0.1));
+            border-radius: 20px;
+            padding: 2px 16px;
+            font-size: 11px;
+            color: #f7b731;
+            letter-spacing: 2px;
+            border: 1px solid rgba(247, 183, 49, 0.15);
+            margin-bottom: 16px;
+        }
+
+        /* ===== 领取按钮 ===== */
+        .btn-claim {
+            position: relative;
+            width: 100%;
+            max-width: 260px;
+            padding: 16px 0;
+            border: none;
+            border-radius: 60px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #0b0e1a;
+            background: linear-gradient(135deg, #f7b731, #f5a623);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 8px 30px rgba(247, 183, 49, 0.35);
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        .btn-claim:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(247, 183, 49, 0.5);
+        }
+
+        .btn-claim:active {
+            transform: scale(0.96);
+            box-shadow: 0 4px 15px rgba(247, 183, 49, 0.3);
+        }
+
+        .btn-claim .sparkle {
+            display: inline-block;
+            animation: sparkleBtn 1.5s ease-in-out infinite;
+        }
+
+        @keyframes sparkleBtn {
+            0%,
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+            50% {
+                transform: scale(1.3) rotate(20deg);
+            }
+        }
+
+        .btn-claim .btn-glow {
+            position: absolute;
+            inset: -2px;
+            border-radius: 60px;
+            background: linear-gradient(135deg, #f7b731, #f5a623, #f7b731);
+            filter: blur(12px);
+            opacity: 0.3;
+            z-index: -1;
+            animation: glowPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes glowPulse {
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.6;
+                transform: scale(1.05);
+            }
+        }
+
+        /* ===== 扫码区域 ===== */
+        .qr-section {
+            margin-top: 24px;
+            width: 100%;
+            max-width: 280px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .qr-divider {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 12px;
+            letter-spacing: 2px;
+        }
+
+        .qr-divider .line {
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        }
+
+        .qr-box {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 12px 20px 12px 16px;
+            backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            width: 100%;
+            touch-action: manipulation;
+        }
+
+        .qr-box:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(247, 183, 49, 0.2);
+        }
+
+        .qr-box:active {
+            transform: scale(0.97);
+        }
+
+        .qr-code-sim {
+            width: 52px;
+            height: 52px;
+            background: #fff;
+            border-radius: 10px;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: repeat(7, 1fr);
+            gap: 1.5px;
+            padding: 4px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .qr-cell {
+            background: #0b0e1a;
+            border-radius: 1px;
+        }
+
+        .qr-cell.light {
+            background: #fff;
+        }
+
+        .qr-cell.dark {
+            background: #0b0e1a;
+        }
+
+        /* 用随机类生成二维码图案 */
+        .qr-cell:nth-child(1) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(2) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(3) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(4) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(5) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(6) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(7) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(8) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(9) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(10) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(11) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(12) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(13) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(14) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(15) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(16) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(17) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(18) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(19) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(20) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(21) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(22) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(23) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(24) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(25) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(26) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(27) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(28) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(29) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(30) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(31) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(32) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(33) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(34) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(35) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(36) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(37) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(38) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(39) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(40) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(41) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(42) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(43) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(44) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(45) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(46) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(47) {
+            background: #fff;
+        }
+        .qr-cell:nth-child(48) {
+            background: #0b0e1a;
+        }
+        .qr-cell:nth-child(49) {
+            background: #fff;
+        }
+
+        .qr-text {
+            flex: 1;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .qr-text strong {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .qr-text .hint {
+            color: rgba(247, 183, 49, 0.6);
+            font-size: 11px;
+        }
+
+        /* ===== 底部 ===== */
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 11px;
+            letter-spacing: 3px;
+        }
+
+        /* ===== 点击波纹 ===== */
+        .ripple {
+            position: fixed;
+            border-radius: 50%;
+            background: rgba(247, 183, 49, 0.3);
+            transform: scale(0);
+            animation: rippleAnim 0.8s ease-out forwards;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        @keyframes rippleAnim {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 380px) {
+            .title {
+                font-size: 22px;
+            }
+            .skin-icon {
+                width: 80px;
+                height: 80px;
+                font-size: 42px;
+            }
+            .skin-name {
+                font-size: 19px;
+            }
+            .btn-claim {
+                font-size: 16px;
+                padding: 14px 0;
+                max-width: 220px;
+            }
+            .qr-box {
+                padding: 10px 14px;
+            }
+            .qr-code-sim {
+                width: 44px;
+                height: 44px;
+            }
+        }
+
+        @media (min-width: 600px) {
+            .container {
+                padding: 40px 24px;
+            }
+            .gift-card {
+                padding: 32px 28px 28px;
+                border-radius: 40px;
+            }
+            .skin-icon {
+                width: 120px;
+                height: 120px;
+                font-size: 64px;
+            }
+        }
+
+        /* ===== 加载动画 ===== */
+        .fade-in {
+            animation: fadeInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+
+        .fade-in-d1 {
+            animation-delay: 0.1s;
+        }
+        .fade-in-d2 {
+            animation-delay: 0.2s;
+        }
+        .fade-in-d3 {
+            animation-delay: 0.3s;
+        }
+        .fade-in-d4 {
+            animation-delay: 0.4s;
+        }
+        .fade-in-d5 {
+            animation-delay: 0.5s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* ===== 飘落的星光粒子 ===== */
+        .particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            font-size: 10px;
+            color: rgba(247, 183, 49, 0.3);
+            animation: fallParticle 8s linear infinite;
+        }
+
+        @keyframes fallParticle {
+            0% {
+                transform: translateY(-20vh) rotate(0deg) scale(0.5);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(110vh) rotate(720deg) scale(1.2);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 星空背景 ===== -->
+    <div class="stars-bg" id="starsBg"></div>
+
+    <!-- ===== 流星 ===== -->
+    <div class="shooting-star"></div>
+    <div class="shooting-star"></div>
+    <div class="shooting-star"></div>
+
+    <!-- ===== 云朵 ===== -->
+    <div class="cloud" style="width:180px;height:60px;top:8%;left:-20px;--dur:22s;"></div>
+    <div class="cloud" style="width:250px;height:80px;bottom:15%;right:-30px;--dur:28s;"></div>
+    <div class="cloud" style="width:120px;height:40px;top:45%;left:70%;--dur:18s;"></div>
+
+    <!-- ===== 光晕 ===== -->
+    <div class="glow-orb gold"></div>
+    <div class="glow-orb purple"></div>
+
+    <!-- ===== 主容器 ===== -->
+    <div class="container">
+
+        <!-- 顶部装饰 -->
+        <div class="header-decoration fade-in fade-in-d1">
+            <span class="line"></span>
+            <span class="icon">✦</span>
+            <span class="line"></span>
+        </div>
+
+        <!-- 标题 -->
+        <h1 class="title fade-in fade-in-d1">
+            <span class="highlight">光遇</span> · 生日惊喜
+        </h1>
+        <p class="subtitle fade-in fade-in-d2">✦ 限定 · 赠予特别的你 ✦</p>
+
+        <!-- 生日标签 -->
+        <div class="birthday-tag fade-in fade-in-d2">🎂 献给最闪耀的光之子</div>
+
+        <!-- ===== 礼物卡片 ===== -->
+        <div class="gift-card fade-in fade-in-d3" id="giftCard">
+
+            <!-- 皮肤图标 -->
+            <div class="skin-icon" id="skinIcon">🕯️</div>
+
+            <!-- 皮肤名称 -->
+            <div class="skin-name">
+                追光季 · <span class="light">追光大伞</span>
+            </div>
+
+            <!-- 稀有度 -->
+            <div class="rarity">✦ 限定 ✦</div>
+
+            <!-- 描述 -->
+            <p class="skin-desc">「以星光为翼，陪你穿越云海」</p>
+
+            <!-- 领取按钮 -->
+            <button class="btn-claim" id="btnClaim">
+                <span class="btn-glow"></span>
+                <span class="sparkle">✨</span>
+                立即领取
+                <span class="sparkle">✨</span>
+            </button>
+
+        </div>
+
+        <!-- ===== 扫码区域 ===== -->
+        <div class="qr-section fade-in fade-in-d4">
+            <div class="qr-divider">
+                <span class="line"></span>
+                <span>11</span>
+                <span class="line"></span>
+            </div>
+
+            <div class="qr-box" id="qrBox">
+                <!-- 模拟二维码 -->
+                <div class="qr-code-sim" id="qrCodeSim">
+                    <!-- 49 个格子由 CSS 控制 -->
+                </div>
+                <div class="qr-text">
+                    <strong>📱 扫码即领</strong><br />
+                    <span class="hint">长按识别 · 光遇限定皮肤</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部 -->
+        <div class="footer fade-in fade-in-d5">
+            ✦ 献给特别的你 · 生日快乐 ✦
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // 1. 生成星星
+        // ============================================================
+        (function createStars() {
+            const bg = document.getElementById('starsBg');
+            const count = 160;
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = 1.5 + Math.random() * 3;
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.setProperty('--dur', (2 + Math.random() * 4) + 's');
+                star.style.animationDelay = (Math.random() * 5) + 's';
+                star.style.opacity = 0.3 + Math.random() * 0.7;
+                bg.appendChild(star);
+            }
+        })();
+
+        // ============================================================
+        // 2. 飘落粒子（光点）
+        // ============================================================
+        (function createParticles() {
+            const emojis = ['✦', '·', '✧', '◦', '•'];
+            for (let i = 0; i < 18; i++) {
+                const el = document.createElement('div');
+                el.className = 'particle';
+                el.textContent = emojis[i % emojis.length];
+                el.style.left = Math.random() * 100 + '%';
+                el.style.fontSize = (6 + Math.random() * 10) + 'px';
+                el.style.animationDuration = (10 + Math.random() * 12) + 's';
+                el.style.animationDelay = (Math.random() * 12) + 's';
+                el.style.opacity = 0.15 + Math.random() * 0.25;
+                document.body.appendChild(el);
+            }
+        })();
+
+        // ============================================================
+        // 3. 二维码模拟（让格子更随机）
+        // ============================================================
+        (function randomizeQR() {
+            const cells = document.querySelectorAll('.qr-cell');
+            cells.forEach(cell => {
+                // 随机决定亮暗，但保留一些规律使其像二维码
+                const r = Math.random();
+                if (r < 0.45) {
+                    cell.style.background = '#fff';
+                } else {
+                    cell.style.background = '#0b0e1a';
+                }
+            });
+            // 强制一些定位点
+            const corners = [0, 1, 2, 6, 7, 8, 9, 10, 11, 15, 16, 17, 18, 19, 20, 24, 25, 26, 27, 28, 29, 33, 34, 35, 36, 37,
+                38, 42, 43, 44
+            ];
+            corners.forEach(idx => {
+                if (cells[idx]) cells[idx].style.background = '#fff';
+            });
+            // 中心区域
+            const center = [24, 25, 26, 31, 32, 33, 38, 39, 40];
+            center.forEach(idx => {
+                if (cells[idx]) cells[idx].style.background = Math.random() > 0.5 ? '#fff' : '#0b0e1a';
+            });
+        })();
+
+        // ============================================================
+        // 4. 点击领取 → 跳转到 gift.html
+        // ============================================================
+        const btn = document.getElementById('btnClaim');
+        const card = document.getElementById('giftCard');
+
+        function handleClaim(e) {
+            // 波纹效果
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            const rect = btn.getBoundingClientRect();
+            const x = (e.clientX || e.touches?.[0]?.clientX || rect.left + rect.width / 2) - rect.left;
+            const y = (e.clientY || e.touches?.[0]?.clientY || rect.top + rect.height / 2) - rect.top;
+            ripple.style.left = (rect.left + x - 40) + 'px';
+            ripple.style.top = (rect.top + y - 40) + 'px';
+            ripple.style.width = '80px';
+            ripple.style.height = '80px';
+            document.body.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 900);
+
+            // 按钮反馈
+            btn.textContent = '🎁 领取中...';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+
+            // 卡片发光
+            card.style.boxShadow = '0 0 60px rgba(247,183,49,0.4), inset 0 0 40px rgba(247,183,49,0.1)';
+
+            // 延迟跳转
+            setTimeout(() => {
+                // 跳转到 gift.html（同一目录）
+                window.location.href = 'gift.html';
+            }, 800);
+        }
+
+        btn.addEventListener('click', handleClaim);
+        btn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            handleClaim(e);
+        });
+
+        // ============================================================
+        // 5. 扫码区域点击 → 模拟扫码（也跳转）
+        // ============================================================
+        const qrBox = document.getElementById('qrBox');
+        qrBox.addEventListener('click', function(e) {
+            // 闪烁反馈
+            this.style.borderColor = 'rgba(247,183,49,0.5)';
+            this.style.background = 'rgba(255,255,255,0.08)';
+            setTimeout(() => {
+                this.style.borderColor = 'rgba(255,255,255,0.06)';
+                this.style.background = 'rgba(255,255,255,0.04)';
+            }, 400);
+
+            // 也触发领取跳转
+            handleClaim(e);
+        });
+
+        qrBox.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            this.click();
+        });
+
+        // ============================================================
+        // 6. 键盘快捷键（桌面端演示）
+        // ============================================================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                btn.click();
+            }
+        });
+
+        console.log('✨ 光遇 · 生日惊喜已加载 ✨');
+        console.log('🎂 祝你的朋友生日快乐！');
+    </script>
+
+</body>
+</html>
