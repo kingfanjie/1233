@@ -479,7 +479,7 @@
             <!-- 横屏图片（自适应，cover，锁定比例） -->
             <img
             id="giftImage"
-            src="./photo.png"
+            src="https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEYc-dqcTBdPdtehV5LFxbDJk1JzibPOgACfyQAApvPiVe7TrS87kQ9zT0E.png"
             alt="光遇 · 星空"
             crossorigin="anonymous"
             loading="eager"
@@ -552,7 +552,7 @@
             img.addEventListener('error', function() {
                 // 加载失败，使用备选图片
                 this.src =
-                './photo.png';
+                'https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEYc-dqcTBdPdtehV5LFxbDJk1JzibPOgACfyQAApvPiVe7TrS87kQ9zT0E.png';
                 // 如果备选也失败，保留占位
                 this.addEventListener('error', function() {
                     if (placeholder) {
@@ -568,7 +568,7 @@
         // ============================================================
         const preloadImg = new Image();
         preloadImg.src =
-        './photo.png';
+        'https://img.remit.ee/api/file/BQACAgUAAyEGAASHRsPbAAEYc-dqcTBdPdtehV5LFxbDJk1JzibPOgACfyQAApvPiVe7TrS87kQ9zT0E.png';
 
         // ============================================================
         // 3. 屏幕方向变化时，确保图片始终充盈（无额外操作，CSS已处理）
